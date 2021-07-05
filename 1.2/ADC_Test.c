@@ -8,7 +8,7 @@ MODULE_VERSION("1.0.0");
 MODULE_LICENSE("GPL");
 
 
-int init_module()
+int __init init_module()
 {
     printk(KERN_INFO "ADC_Test started!\n");
     return 0;
