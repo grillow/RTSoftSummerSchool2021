@@ -1,8 +1,8 @@
 ### 1.1
-<pre>
+```
 1. Inject the flashdrive
 2. Enjoy <flashdrive>/<timestamp>/log
-</pre>
+```
 ### 1.2
 ```
 make
