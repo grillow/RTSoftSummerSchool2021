@@ -32,7 +32,6 @@ static struct file_operations fops = {
 };
 
 
-
 int __init init_module()
 {
     printk(KERN_INFO "ADC_Test loaded!\n");
@@ -62,7 +61,6 @@ int device_open(struct inode *inode, struct file *file)
         return -EBUSY;
     }
     is_open = true;
-    printk(KERN_INFO "ADC_Test opened!\n");
     return 0;
 }
 
@@ -70,7 +68,6 @@ int device_open(struct inode *inode, struct file *file)
 int device_release(struct inode *inode, struct file *file)
 {
     is_open = false;
-    printk(KERN_INFO "ADC_Test released!\n");
     return 0;
 }
 
@@ -78,10 +75,7 @@ int device_release(struct inode *inode, struct file *file)
 ssize_t device_read(struct file *filp, char *buffer,
         size_t length, loff_t *offset)
 {
-    size_t read = 0;
+    size_t read = sprintf(buffer, "%d\n", number++);
 
-    read = sprintf(buffer, "%ld\n", number++);
-
-    printk(KERN_INFO "ADC_Test read!\n");
     return read;
 }
