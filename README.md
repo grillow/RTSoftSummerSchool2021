@@ -12,3 +12,8 @@ sudo dd if=/dev/ADC_Test of=/dev/stdout count=1 2>/dev/null
 sudo rm /dev/ADC_Test
 sudo rmmod ADC_Test
 ```
+### 2.1
+```
+docker build . -t grillow1337/x11-forwarding-example
+docker run -it --rm -e DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --net=host --device /dev/snd grillow1337/x11-forwarding-example
+```
