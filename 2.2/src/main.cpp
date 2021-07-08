@@ -13,10 +13,12 @@ auto main() -> int {
         cv::Mat gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-        cv::GaussianBlur(gray, gray, { 7, 7 }, 7);
+        // cv::GaussianBlur(gray, gray, { 7, 7 }, 7);
 
-        cv::Mat edged;
+        cv::Mat edged(gray);
         cv::Canny(gray, edged, 60, 180);
+
+        // cv::adaptiveThreshold(gray, gray, 250, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 7, 2);
 
 
         std::vector<std::vector<cv::Point> > contours;
