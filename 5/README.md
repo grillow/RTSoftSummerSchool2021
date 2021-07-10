@@ -28,3 +28,6 @@ curl --header "Content-Type: application/json" --request POST --data '{"action":
 curl --header "Content-Type: application/json" --request POST --data '{"action":"stop"}' http://localhost:8080
 ```
 ![Result](result.png)
+
+##### P.S.
+IPC между нодой (REST) и opencv реализовано через TCP сокет. Реализовал бы через pipe, если бы узнал о том, что нода его поддерживает, раньше.
