@@ -29,7 +29,7 @@ curl --header "Content-Type: application/json" --request POST --data '{"action":
 ```
 or<br/>
 http://localhost:8080 in browser<br/>
-![Webpage](webpage.png)
+![Webpage](webpage.png)<br/>
 Result:
 ![Result](result.png)
 ##### P.S.
