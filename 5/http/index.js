@@ -8,7 +8,8 @@ app.use(express.json());
 
 app.post('/', (req, res) => {
     try {
-        console.log(req.body.action);
+        const action = req.body.action;
+        
         res.sendStatus(200);
     } catch (error) {
         console.log(`error: ${error}`);

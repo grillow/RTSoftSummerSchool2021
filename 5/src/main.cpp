@@ -1,13 +1,65 @@
+#include <boost/asio/error.hpp>
 #include <chrono>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <rapidjson/stringbuffer.h>
+#include <stdexcept>
+#include <thread>
 #include <vector>
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/allocators.h>
 #include <mosquitto.h>
+
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
+
+
+class IPCConnection {
+public:
+    IPCConnection() : m_socket(m_io_service) {
+        m_socket.open(boost::asio::ip::tcp::v4());
+        m_socket.non_blocking(true);
+    }
+
+    bool ShouldRun() {
+        CheckSocket();
+        return m_run;
+    }
+
+    void Connect(const std::string & raw_address, const uint32_t port) {
+        const boost::asio::ip::tcp::resolver resolver(m_io_service);
+        const boost::asio::ip::address address = boost::asio::ip::address::from_string(raw_address);
+        const boost::asio::ip::tcp::endpoint endpoint(address, port);
+        m_socket.connect(endpoint);
+    }
+
+    void Disconnect() {
+
+    }
+
+    void CheckSocket() {
+        boost::array<std::byte, 1> buf;
+        boost::system::error_code error;
+
+        const size_t read = m_socket.read_some(boost::asio::buffer(buf), error);
+        if (error == boost::asio::error::eof) {
+            throw std::runtime_error("Connection closed by remote server");
+        } else {
+            throw std::runtime_error(error.message());
+        }
+        
+        if (error == boost::asio::error::would_block || read != 0) {
+            m_run = static_cast<bool>(buf[0]);
+        }
+    }
+
+private:
+    boost::asio::io_service m_io_service;
+    boost::asio::ip::tcp::socket m_socket;
+    std::atomic_bool m_run = false;
+};
 
 
 auto main() -> int {
@@ -34,10 +86,18 @@ auto main() -> int {
     cv::setIdentity(KF.measurementNoiseCov, cv::Scalar::all(1e-1));
     cv::setIdentity(KF.errorCovPost, cv::Scalar::all(50));
     
+    IPCConnection connection;
+    connection.Connect("127.0.0.1", 8000);
+
     cv::VideoCapture cap("data/video.mp4");
     std::vector<cv::Point> trajectory;
     cv::Mat frame;
     while(cap.read(frame)) {
+        if (!connection.ShouldRun()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            continue;
+        }
+        
         cv::Mat processed(frame);
 
         cv::Mat gray;
@@ -104,6 +164,8 @@ auto main() -> int {
     mosquitto_disconnect(client);
     mosquitto_destroy(client);
     mosquitto_lib_cleanup();
+
+    connection.Disconnect();
 
     return 0;
 }
