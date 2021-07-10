@@ -1,3 +1,4 @@
+#include <chrono>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
@@ -15,7 +16,26 @@ auto main() -> int {
     struct mosquitto* client = mosquitto_new("publisher", true, NULL);
     mosquitto_connect(client, "localhost", 1883, 300);
     
-    cv::VideoCapture cap("data/video.mkv");
+    cv::KalmanFilter KF(4, 2, 0);
+    KF.transitionMatrix = (cv::Mat_<float>(4, 4) <<
+        1, 0, 1, 0,
+        0, 1, 0, 1,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    );
+    cv::Mat_<float> measurement(2, 1);
+    measurement.setTo(0);
+    KF.statePre.at<float>(0) = 0;
+    KF.statePre.at<float>(1) = 0;
+    KF.statePre.at<float>(2) = 0;
+    KF.statePre.at<float>(3) = 0;
+    cv::setIdentity(KF.measurementMatrix);
+    cv::setIdentity(KF.processNoiseCov, cv::Scalar::all(1e-4));
+    cv::setIdentity(KF.measurementNoiseCov, cv::Scalar::all(1e-1));
+    cv::setIdentity(KF.errorCovPost, cv::Scalar::all(50));
+    
+    cv::VideoCapture cap("data/video.mp4");
+    std::vector<cv::Point> trajectory;
     cv::Mat frame;
     while(cap.read(frame)) {
         cv::Mat processed(frame);
@@ -41,14 +61,31 @@ auto main() -> int {
             cv::rectangle(processed, rect, { 255, 0, 0 }, 1);
         }
 
+
+        cv::Mat prediction = KF.predict();
+        cv::Point predictPt(prediction.at<float>(0), prediction.at<float>(1));
+        
+        if (!contours.size()) {
+            continue;
+        }
+        const cv::Rect rect = cv::boundingRect(contours[0]);
+        const cv::Point center = { (rect.x + rect.width / 2), (rect.y + rect.height / 2) };
+        measurement(0) = center.x;
+        measurement(1) = center.y;
+        
+        cv::Mat estimated = KF.correct(measurement);
+        cv::Point statePt(estimated.at<float>(0), estimated.at<float>(1));
+        trajectory.emplace_back(statePt);
+        for (const auto & point : trajectory) {
+            cv::circle(processed, point, 5, { 127, 127, 0 }, 1);
+        }
+        
         {
             rapidjson::Document document;
             document.SetObject();
             rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
-            document.AddMember("x1", 11337, allocator);
-            document.AddMember("y1", 21337, allocator);
-            document.AddMember("x2", 31337, allocator);
-            document.AddMember("y2", 41337, allocator);
+            document.AddMember("X", center.x, allocator);
+            document.AddMember("Y", center.y, allocator);
 
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -60,7 +97,7 @@ auto main() -> int {
         }
 
         imshow("window", processed);
-        if(cv::waitKey(30) >= 0) break;
+        if (cv::waitKey(30) >= 0) break;
     }
     
     // mosquitto (wonderful C API)
