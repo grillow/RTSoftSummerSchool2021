@@ -16,6 +16,7 @@
 #include <boost/array.hpp>
 
 
+// #include <bitset>
 class IPCConnection {
 public:
     IPCConnection() : m_socket(m_io_service) {
@@ -25,6 +26,7 @@ public:
 
     bool ShouldRun() {
         CheckSocket();
+        // std::cout << std::bitset<1>(m_run) << std::endl;
         return m_run;
     }
 
@@ -36,7 +38,7 @@ public:
     }
 
     void Disconnect() {
-
+        m_socket.close();
     }
 
     void CheckSocket() {
@@ -46,11 +48,13 @@ public:
         const size_t read = m_socket.read_some(boost::asio::buffer(buf), error);
         if (error == boost::asio::error::eof) {
             throw std::runtime_error("Connection closed by remote server");
+        } else if (error == boost::asio::error::would_block || error == boost::asio::error::try_again) {
+            // std::cout << "nothing to read" << std::endl;
         } else {
-            throw std::runtime_error(error.message());
+            // throw std::runtime_error(error.message());
         }
-        
-        if (error == boost::asio::error::would_block || read != 0) {
+
+        if (read != 0) {
             m_run = static_cast<bool>(buf[0]);
         }
     }
@@ -64,9 +68,9 @@ private:
 
 auto main() -> int {
     // mosquittoo
-    mosquitto_lib_init();
-    struct mosquitto* client = mosquitto_new("publisher", true, NULL);
-    mosquitto_connect(client, "localhost", 1883, 300);
+    // mosquitto_lib_init();
+    // struct mosquitto* client = mosquitto_new("publisher", true, NULL);
+    // mosquitto_connect(client, "localhost", 1883, 300);
     
     cv::KalmanFilter KF(4, 2, 0);
     KF.transitionMatrix = (cv::Mat_<float>(4, 4) <<
@@ -93,7 +97,7 @@ auto main() -> int {
     std::vector<cv::Point> trajectory;
     cv::Mat frame;
     while(cap.read(frame)) {
-        if (!connection.ShouldRun()) {
+        if (!connection.ShouldRun()) {  // read socket every socket
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
@@ -152,18 +156,20 @@ auto main() -> int {
             document.Accept(writer);
             const std::string str = buffer.GetString();
 
+            std::cout << str << std::endl;
             // mosquittoo
-            mosquitto_publish(client, NULL, "coordinates", str.length(), str.c_str(), 0, false);
+            // mosquitto_publish(client, NULL, "coordinates", str.length(), str.c_str(), 0, false);
         }
 
         imshow("window", processed);
         if (cv::waitKey(30) >= 0) break;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     
     // mosquitto (wonderful C API)
-    mosquitto_disconnect(client);
-    mosquitto_destroy(client);
-    mosquitto_lib_cleanup();
+    // mosquitto_disconnect(client);
+    // mosquitto_destroy(client);
+    // mosquitto_lib_cleanup();
 
     connection.Disconnect();
 
