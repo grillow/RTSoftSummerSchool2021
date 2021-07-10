@@ -26,7 +26,6 @@ public:
 
     bool ShouldRun() {
         CheckSocket();
-        // std::cout << std::bitset<1>(m_run) << std::endl;
         return m_run;
     }
 
@@ -46,31 +45,36 @@ public:
         boost::system::error_code error;
 
         const size_t read = m_socket.read_some(boost::asio::buffer(buf), error);
+        
+#if 0
         if (error == boost::asio::error::eof) {
-            throw std::runtime_error("Connection closed by remote server");
+             throw std::runtime_error("Connection closed by remote server");
         } else if (error == boost::asio::error::would_block || error == boost::asio::error::try_again) {
             // std::cout << "nothing to read" << std::endl;
         } else {
             // throw std::runtime_error(error.message());
         }
+#endif
 
         if (read != 0) {
             m_run = static_cast<bool>(buf[0]);
+            std::cout << "new m_run: " << m_run << std::endl;
         }
     }
 
 private:
     boost::asio::io_service m_io_service;
     boost::asio::ip::tcp::socket m_socket;
-    std::atomic_bool m_run = false;
+    // std::atomic_bool m_run = false;
+    bool m_run = false;
 };
 
 
 auto main() -> int {
     // mosquittoo
-    // mosquitto_lib_init();
-    // struct mosquitto* client = mosquitto_new("publisher", true, NULL);
-    // mosquitto_connect(client, "localhost", 1883, 300);
+    mosquitto_lib_init();
+    struct mosquitto* client = mosquitto_new("publisher", true, NULL);
+    mosquitto_connect(client, "localhost", 1883, 300);
     
     cv::KalmanFilter KF(4, 2, 0);
     KF.transitionMatrix = (cv::Mat_<float>(4, 4) <<
@@ -158,7 +162,7 @@ auto main() -> int {
 
             std::cout << str << std::endl;
             // mosquittoo
-            // mosquitto_publish(client, NULL, "coordinates", str.length(), str.c_str(), 0, false);
+            mosquitto_publish(client, NULL, "coordinates", str.length(), str.c_str(), 0, false);
         }
 
         imshow("window", processed);
@@ -167,9 +171,9 @@ auto main() -> int {
     }
     
     // mosquitto (wonderful C API)
-    // mosquitto_disconnect(client);
-    // mosquitto_destroy(client);
-    // mosquitto_lib_cleanup();
+    mosquitto_disconnect(client);
+    mosquitto_destroy(client);
+    mosquitto_lib_cleanup();
 
     connection.Disconnect();
 
