@@ -27,8 +27,8 @@ Shell 5 (REST client):
 curl --header "Content-Type: application/json" --request POST --data '{"action":"start"}' http://localhost:8080
 curl --header "Content-Type: application/json" --request POST --data '{"action":"stop"}' http://localhost:8080
 ```
-or
-http://localhost:8080 in browser
+or<br/>
+http://localhost:8080 in browser<br/>
 ![Webpage](webpage.png)
 ![Result](result.png)
 ##### P.S.
