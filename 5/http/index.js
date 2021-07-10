@@ -22,6 +22,7 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
+// backend
 app.post('/', (req, res) => {
     try {
         console.log(req.body);
@@ -38,6 +39,11 @@ app.post('/', (req, res) => {
     } catch (error) {
         console.log(`error: ${error}`);
     }
+});
+// frontend
+app.get('/', (req, res) => {
+    res.statusCode = 200;
+    res.sendFile('html/index.html', {root: __dirname });
 });
 
 app.listen(PORT);

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <script>
+        const sendAction = (action) => {
+            const data = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: action })
+            };
+            
+            fetch('/', data).then(res => {
+                console.log(JSON.stringify(data));    // sent successfully
+            });
+        }
+    </script>
+    <body>
+
+        <h1>Controller</h1>
+        <button onclick="sendAction('start')">start</button>
+        <button onclick="sendAction('stop')">stop</button>
+
+    </body>
+</html>
