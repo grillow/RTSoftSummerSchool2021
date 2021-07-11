@@ -95,7 +95,7 @@ auto main() -> int {
             document.Accept(writer);
             const std::string str = buffer.GetString();
 
-            std::cout << str << std::endl;
+            // std::cout << str << std::endl;
             // mosquittoo
             mosquitto_publish(client, NULL, "coordinates", str.length(), str.c_str(), 0, false);
         }

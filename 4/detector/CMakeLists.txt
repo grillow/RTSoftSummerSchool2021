@@ -29,11 +29,6 @@ pkg_check_modules( Mosquitto REQUIRED IMPORTED_TARGET libmosquitto )
 find_package( RapidJSON REQUIRED )
 include_directories( ${RapidJSON_INCLUDE_DIRS} )
 
-find_package( Boost REQUIRED )
-include_directories( ${Boost_INCLUDE_DIRS} )
-
-find_package( Threads REQUIRED )
-
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 file(GLOB SOURCE src/*.cpp)
@@ -41,5 +36,3 @@ add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 target_link_libraries( ${PROJECT_NAME} PkgConfig::Mosquitto)
-target_link_libraries( ${PROJECT_NAME} ${Boost_LIBRARIES})
-target_link_libraries( ${PROJECT_NAME} Threads::Threads)
