@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/grillow/coding/RTSoftSummerSchool2021/5/build",
+  "command": "/usr/bin/c++  -isystem /usr/include/opencv  -Wall -Werror -Wpedantic -O3 -std=gnu++17 -o CMakeFiles/3.dir/src/main.cpp.o -c /home/grillow/coding/RTSoftSummerSchool2021/5/src/main.cpp",
+  "file": "/home/grillow/coding/RTSoftSummerSchool2021/5/src/main.cpp"
+}
+]
