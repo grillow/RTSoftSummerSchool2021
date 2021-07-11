@@ -5,5 +5,5 @@ xhost +
 docker-compose up
 xhost -
 ```
-Result:
+Result:<br/>
 ![Result](result.png)
