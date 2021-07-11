@@ -1,0 +1,95 @@
+version: "1337"
+services:
+    influxdb:
+        image: influxdb:1.8
+        container_name: influxdb
+        restart: always
+        ports:
+            - 8086:8086
+        volumes:
+            - influxdb-volume:/var/lib/influxdb
+        environment: 
+            - INFLUXDB_DB=detector_data
+            - INFLUXDB_USER=grafana             # docker secret?
+            - INFLUXDB_USER_PASSWORD=password   # docker secret?
+            - INFLUXDB_ADMIN_ENABLED=true
+            - INFLUXDB_ADMIN_USER=admin         # docker secret?
+            - INFLUXDB_ADMIN_PASSWORD=password  # docker secret?
+
+    grafana:
+        image: grafana/grafana
+        container_name: grafana
+        restart: always
+        ports:
+            - 3000:3000
+        volumes:
+            - grafana-volume:/var/lib/grafana
+        depends_on: 
+            - influxdb
+
+    zookeeper:
+        image: wurstmeister/zookeeper
+        container_name: zookeeper
+        hostname: zookeeper
+        ports:
+            - "2181:2181"
+        depends_on: 
+            - grafana
+
+    kafka:
+        image: wurstmeister/kafka
+        container_name: kafka
+        hostname: kafka
+        ports:
+            - "9092:9092"
+        expose:
+            - "9093"
+        environment:
+            KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://kafka:9092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+            KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+            KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_CREATE_TOPICS: "topic_detector:1:1"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on: 
+            - zookeeper
+
+    mqtt-broker:
+        image: toke/mosquitto
+        hostname: mosquitto
+        container_name: mqtt-broker
+        expose:
+            - 1883
+        ports:
+            - 1883:1883
+        restart: always
+        depends_on: 
+            - kafka
+
+    mqtt-subscriber:
+        build: ./mqtt-subscriber
+        container_name: mqtt-subscriber
+        depends_on:
+            - mqtt-broker
+
+    kafka-consumer:
+        build: ./kafka-consumer
+        container_name: kafka-consumer
+        depends_on: 
+            - mqtt-subscriber
+
+    detector:
+        build: ./detector
+        container_name: detector
+        environment:
+            - DISPLAY=$DISPLAY
+        volumes:
+            - /tmp/.X11-unix:/tmp/.X11-unix
+        depends_on:
+            - kafka-consumer
+
+volumes:
+    grafana-volume:
+    influxdb-volume:
