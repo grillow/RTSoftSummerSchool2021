@@ -68,17 +68,17 @@ services:
         depends_on: 
             - kafka
 
-    mqtt-subscriber:
-        build: ./mqtt-subscriber
-        container_name: mqtt-subscriber
+    subscriber:
+        build: ./subscriber
+        container_name: subscriber
         depends_on:
             - mqtt-broker
 
-    kafka-consumer:
-        build: ./kafka-consumer
-        container_name: kafka-consumer
+    consumer:
+        build: ./consumer
+        container_name: consumer
         depends_on: 
-            - mqtt-subscriber
+            - subscriber
 
     detector:
         build: ./detector
@@ -88,7 +88,7 @@ services:
         volumes:
             - /tmp/.X11-unix:/tmp/.X11-unix
         depends_on:
-            - kafka-consumer
+            - consumer
 
 volumes:
     grafana-volume:
