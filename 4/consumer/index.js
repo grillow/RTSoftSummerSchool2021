@@ -9,4 +9,4 @@ const consumer = new kafka.Consumer({
     maxSize: 1048576
 });
 
-const influxDB = new InfluxDB({proxy: '', });
+
